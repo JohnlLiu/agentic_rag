@@ -17,3 +17,24 @@ def index_document(filename: str, content: bytes):
     path = os.path.join(DATA_DIR, filename)
     with open(path, "wb") as f:
         f.write(content)
+
+    reader = SimpleDirectoryReader(DATA_DIR)
+    docs = reader.load_data()
+
+    vector_store = get_vector_store()
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+    # Use Google GenAI embeddings (via Vertex AI)
+    embedding_model = VertexAITextEmbedding(model_name="textembedding-gecko@latest")
+
+    service_context = ServiceContext.from_defaults(
+        embed_model=embedding_model,
+        node_parser=SentenceSplitter(chunk_size=512, chunk_overlap=64)
+    )
+
+    index = VectorStoreIndex.from_documents(
+        docs,
+        storage_context=storage_context,
+        service_context=service_context
+    )
+    index.storage_context.persist(persist_dir=PERSIST_DIR)
