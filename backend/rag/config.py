@@ -1,4 +1,4 @@
-from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.vector_stores.faiss import FaissVectorStore
 
 def get_vector_store():
-    return ChromaVectorStore(persist_dir="backend/index_store")
+    return FaissVectorStore(persist_dir="backend/index_store")
