@@ -7,7 +7,6 @@ from llama_index.core import (
     load_index_from_storage,
     VectorStoreIndex,
     StorageContext,
-    ServiceContext,
     Settings
 )
 from llama_index.vector_stores.faiss import FaissVectorStore
