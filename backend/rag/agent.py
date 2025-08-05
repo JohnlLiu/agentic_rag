@@ -14,13 +14,19 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
 from langchain_core.language_models import BaseChatModel
 from langchain_core.outputs import ChatResult, ChatGeneration
-from langchain_core.messages import AIMessage, HumanMessage, BaseMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, BaseMessage
 from llama_index.llms.google_genai import GoogleGenAI
+from langchain_core.runnables.base import Runnable
 from google import genai
 
 load_dotenv()
 api_key = os.getenv('GEMINI_API_KEY')
 client = genai.Client(api_key = api_key)
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    google_api_key=api_key,
+    )
 
 @tool
 def llm_query_tool(query: str) -> str:
@@ -31,21 +37,15 @@ def llm_query_tool(query: str) -> str:
     )
     return llm.complete(query).text
 
-
 @tool
 def rag_query_tool(query: str) -> str:
     """Query the RAG system with a question."""
     from backend.rag.vector_store import rag_tool
     return rag_tool(query)
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
-    google_api_key=api_key,
-    convert_system_message_to_human=True
-    )
-
 # response = llm.invoke([HumanMessage(content="What is the capital of Canada?")])
 # print(response.content)
+
 tool_map = {
     "llm_tool": llm_query_tool, 
     "rag_tool": rag_query_tool,
@@ -60,7 +60,6 @@ class AgentState(TypedDict):
 # Define agent node
 def agent_node(state: AgentState) -> AgentState:
     query = state.get("input", "").strip()
-
     if not query:
         return {"agent_out": "[Error] Empty input given to agent."}
 
@@ -91,6 +90,7 @@ def tool_call_node(state: AgentState) -> AgentState:
         print(f"❌ Tool Error: {e}")
         return {"agent_out": f"[Tool Error: {tool_name}] {str(e)}"}
 
+
 def should_call_tool(state: AgentState) -> bool:
     return isinstance(state["agent_out"], dict) and "tool" in state["agent_out"]
 
@@ -114,6 +114,9 @@ builder.add_conditional_edges(
 builder.add_edge("tool_call", END)
 
 graph = builder.compile()
+
+
+# agent.invoke({"input": "What is the capital of Japan?"})
 
 # Runner
 if __name__ == "__main__":
