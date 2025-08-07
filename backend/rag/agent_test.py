@@ -107,3 +107,5 @@ while True:
     except:
         print("Error. Goodbye!")
         break
+
+# https://github.com/lchavasse/langgraph-tutorial/blob/main/basic_rag_agent.py
