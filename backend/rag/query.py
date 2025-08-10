@@ -1,0 +1,56 @@
+import  os
+from dotenv import load_dotenv
+
+from llama_index.core import (
+    load_index_from_storage,
+    StorageContext,
+    Settings,
+    get_response_synthesizer
+)
+
+from llama_index.vector_stores.faiss import FaissVectorStore
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.postprocessor import SimilarityPostprocessor
+from backend.rag.embedding import get_model
+from llama_index.llms.google_genai import GoogleGenAI
+from google import genai
+
+load_dotenv()
+api_key = os.getenv('GEMINI_API_KEY')
+client = genai.Client(api_key = api_key)
+
+def rag_query(query: str) -> str:
+    llm = GoogleGenAI(
+        model = "gemini-2.0-flash",
+        embed_batch_size=100,
+        api_key=api_key
+    )
+
+    embedding_model = get_model()
+    Settings.embed_model = embedding_model
+    Settings.llm = llm
+    Settings.node_parser = SentenceSplitter(chunk_size=256, chunk_overlap=20)
+
+    vector_store = FaissVectorStore.from_persist_dir("backend/index_store")
+    storage_context = StorageContext.from_defaults(
+        vector_store=vector_store, persist_dir="backend/index_store"
+    )
+
+    index = load_index_from_storage(storage_context=storage_context)
+
+    retriever = VectorIndexRetriever(
+        index=index,
+        similarity_top_k=2,
+        vector_store=vector_store,
+    )
+
+    response_synthesizer = get_response_synthesizer()
+
+    query_engine = RetrieverQueryEngine(
+        retriever=retriever,
+        response_synthesizer=response_synthesizer,
+        node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=0.1)],
+    )
+    return query_engine.query(query)

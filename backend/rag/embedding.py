@@ -26,7 +26,7 @@ def embed():
     print(f"Dimension of embeddings: {len(embeddings[0])}")
 
 def get_model():
-    model = embed_model = GoogleGenAIEmbedding(
+    model = GoogleGenAIEmbedding(
         model_name="gemini-embedding-001",
         embad_batch_size=100,
         api_key=api_key

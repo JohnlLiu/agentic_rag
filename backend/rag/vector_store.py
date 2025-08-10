@@ -23,7 +23,7 @@ load_dotenv()
 api_key = os.getenv('GEMINI_API_KEY')
 client = genai.Client(api_key = api_key)
 
-def FAISSvectorstore():
+def create_vector_store():
     embedding_model = get_model()
     Settings.embed_model = embedding_model
     Settings.node_parser = SentenceSplitter(chunk_size=256, chunk_overlap=20)
@@ -124,4 +124,4 @@ def rag_tool(query: str) -> str:
     return query_engine.query(query)
 
 # FAISSvectorstore()
-query()
+# query()

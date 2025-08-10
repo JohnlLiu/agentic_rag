@@ -2,8 +2,6 @@ import os
 from dotenv import load_dotenv
 
 from typing import TypedDict, Union, Annotated
-from typing import Literal
-from typing import List, Optional, Any
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages 
@@ -19,6 +17,8 @@ from langgraph.checkpoint.memory import MemorySaver
 from llama_index.llms.google_genai import GoogleGenAI
 from langchain_core.runnables.base import Runnable
 from google import genai
+
+from backend.rag.query import rag_query
 
 load_dotenv()
 api_key = os.getenv('GEMINI_API_KEY')
@@ -41,13 +41,13 @@ def llm_query_tool(query: str) -> str:
 @tool
 def rag_query_tool(query: str) -> str:
     """Query the RAG system with a question."""
-    from backend.rag.vector_store import rag_tool
-    return rag_tool(query)
+    return rag_query(query)
 
 tool_map = {
-    "llm_tool": llm_query_tool, 
+    "llm_tool": llm_query_tool,
     "rag_tool": rag_query_tool,
     }
+
 tools = list(tool_map.values())
 tool_node = ToolNode(tools)
 
@@ -69,7 +69,6 @@ def tool_router(state: State):
         return "tools"
     return END
 
-
 def agent(state: State):
     messages = state["messages"]
     response = llm_with_tools.invoke(messages)
@@ -83,7 +82,7 @@ builder.add_node("tools", tool_node)
 
 builder.add_edge(START, "agent")
 builder.add_conditional_edges("agent", tool_router, ["tools", END])
-builder.add_edge("tools", "agent")
+# builder.add_edge("tools", "agent")
 
 graph = builder.compile(checkpointer=memory)
 
