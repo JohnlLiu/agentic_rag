@@ -55,7 +55,6 @@ def tavily_search_tool(query: str) -> str:
 
 tool_map = {
     "llm_tool": llm_query_tool,
-    "rag_tool": rag_query_tool,
     "search_tool": tavily_search_tool,
     }
 
@@ -63,7 +62,7 @@ tools = list(tool_map.values())
 tool_node = ToolNode(tools)
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash-lite",
     google_api_key=api_key,
     )
 
@@ -106,16 +105,16 @@ def stream_graph_updates(user_input: str):
             print("Assistant:", value["messages"][-1].content)
 
 
-while True:
-    try:
-        user_input = input("User: ")
-        if user_input.lower() in ["quit", "exit", "q"]:
-            print("Goodbye!")
-            break
+# while True:
+#     try:
+#         user_input = input("User: ")
+#         if user_input.lower() in ["quit", "exit", "q"]:
+#             print("Goodbye!")
+#             break
 
-        stream_graph_updates(user_input)
-    except:
-        print("Error. Goodbye!")
-        break
+#         stream_graph_updates(user_input)
+#     except:
+#         print("Error. Goodbye!")
+#         break
 
 # https://github.com/lchavasse/langgraph-tutorial/blob/main/basic_rag_agent.py
